@@ -1,0 +1,92 @@
+---
+- hosts: webserver
+  become: yes
+  vars_files:
+    - vars/main.yml
+  tasks:
+    - name: ">> 1. Basic Server Setup"
+      block:
+        - name: "Install prerequisites"
+          apt: name=['ufw','curl','git','python3-pip'] state=present update_cache=yes
+        - name: "Create non-root user '{{ server_user }}'"
+          user: name={{ server_user }} shell=/bin/bash groups=sudo append=yes password={{ lookup('password', '/dev/null length=16') }}
+        - name: "Configure UFW"
+          ufw: rule=allow port={{ item }} proto=tcp
+          loop: ['22','80','443']
+
+    - name: ">> 2. Install Docker"
+      block:
+        - name: "Add Docker GPG key"
+          get_url: url=https://download.docker.com/linux/ubuntu/gpg dest=/etc/apt/trusted.gpg.d/docker.gpg mode='0644' force=true
+        - name: "Add Docker repository"
+          apt_repository: repo="deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ansible_lsb.codename }} stable" state=present
+        - name: "Install Docker packages"
+          apt: name=['docker-ce','docker-ce-cli','containerd.io','docker-compose-plugin'] state=present
+        - name: "Add '{{ server_user }}' to docker group"
+          user: name={{ server_user }} groups=docker append=yes
+
+    - name: ">> 3. Setup Project Structure"
+      block:
+        - name: "Create project directories"
+          file: path={{ project_path }}/{{ item }} state=directory owner={{ server_user }} group={{ server_user }}
+          loop: ['', 'src', 'nginx']
+        - name: "Template out config files"
+          template: src="templates/{{ item.src }}" dest="{{ project_path }}/{{ item.dest }}"
+          loop:
+            - { src: 'docker-compose.yml.j2', dest: 'docker-compose.yml' }
+            - { src: 'Dockerfile.j2', dest: 'Dockerfile' }
+            - { src: 'project_env.j2', dest: '.env' }
+            - { src: 'nginx.conf.j2', dest: 'nginx/default.conf' }
+        - name: "Change ownership of project directory"
+          file: path={{ project_path }} owner={{ server_user }} group={{ server_user }} recurse=yes
+
+    - name: ">> 4. Install Laravel Application"
+      become: no
+      command: >
+        docker run --rm
+        -v "{{ project_path }}/src:/app"
+        --user $(id -u):$(id -g)
+        composer create-project --prefer-dist laravel/laravel .
+      args:
+        chdir: "{{ project_path }}"
+
+    - name: ">> 5. Configure Laravel and Permissions"
+      block:
+        - name: "Create Laravel .env file"
+          shell: "cp {{ project_path }}/src/.env.example {{ project_path }}/src/.env"
+        - name: "Set database credentials in Laravel .env"
+          lineinfile: dest={{ project_path }}/src/.env regexp="^{{ item.key }}=" line="{{ item.key }}={{ item.value }}"
+          loop:
+            - { key: 'DB_HOST', value: 'db' }
+            - { key: 'DB_DATABASE', value: '{{ db_name }}' }
+            - { key: 'DB_USERNAME', value: '{{ db_user }}' }
+            - { key: 'DB_PASSWORD', value: '{{ db_password }}' }
+            - { key: 'APP_URL', value: 'https://{{ domain_name }}' }
+        - name: "Set permissions for storage and cache"
+          file: path={{ project_path }}/src/{{ item }} state=directory mode='0775'
+          loop: ['storage', 'bootstrap/cache']
+
+    - name: ">> 6. Obtain SSL Certificate with Certbot"
+      block:
+        - name: "Stop web container if running"
+          community.docker.docker_compose: project_src={{ project_path }} state=absent services=web
+        - name: "Run Certbot to get certificate"
+          command: >
+            docker run --rm -p 80:80 -p 443:443
+            -v "/etc/letsencrypt:/etc/letsencrypt"
+            -v "/var/lib/letsencrypt:/var/lib/letsencrypt"
+            certbot/certbot certonly --standalone
+            --agree-tos --email {{ letsencrypt_email }} --no-eff-email -n
+            -d {{ domain_name }} -d www.{{ domain_name }}
+          
+    - name: ">> 7. Launch Final Application"
+      block:
+        - name: "Run docker compose up"
+          community.docker.docker_compose: project_src={{ project_path }} state=present
+        - name: "Run Laravel migrations"
+          community.docker.docker_compose: project_src={{ project_path }} services=app command="php artisan migrate --force"
+    
+    - name: ">> 8. Setup Auto-Renewal for SSL"
+      block:
+        - name: "Template out renewal script"
+          template: src=templates/certbot-renew.sh.j2 dest=/etc/cron.daily/certbot-renew mode=0755

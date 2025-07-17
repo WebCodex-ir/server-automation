@@ -1,0 +1,22 @@
+# === Main Settings ===
+# نام کاربری که روی سرور ساخته می‌شود
+server_user: root
+
+# === Domain & Network ===
+# دامنه اصلی پروژه
+domain_name: sialkplast.ir
+# ایمیل برای گواهینامه SSL
+letsencrypt_email: meisamshadkam@gmail.com
+# آدرس IP سرور جدید شما
+server_ip: "78.153.136.164" # آی‌پی را داخل کوتیشن قرار دهید
+
+# === Project Paths ===
+# مسیر کامل پوشه پروژه روی سرور
+project_path: "/home/{{ server_user }}/webcodex-admin-pro"
+
+# === Database Credentials ===
+# این رمزها را به مقادیر امن و دلخواه تغییر دهید
+db_name: webcodex_db
+db_user: webcodex_user
+db_password: "sjkhiueDSFHSby34576whjefygfr"
+db_root_password: "sjkhiueDSFHSby34576whjefygfr"
