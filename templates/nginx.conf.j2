@@ -11,10 +11,6 @@ server {
     ssl_certificate /etc/letsencrypt/live/{{ domain_name }}/fullchain.pem;
     ssl_certificate_key /etc/letsencrypt/live/{{ domain_name }}/privkey.pem;
     
-    # سایر تنظیمات بهینه SSL
-    include /etc/letsencrypt/options-ssl-nginx.conf;
-    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
-
     index index.php;
     root /var/www/public;
 

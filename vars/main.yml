@@ -1,6 +1,6 @@
 # === Main Settings ===
 # نام کاربری که روی سرور ساخته می‌شود
-server_user: root
+server_user: webcodex
 
 # === Domain & Network ===
 # دامنه اصلی پروژه
