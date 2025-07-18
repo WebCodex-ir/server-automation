@@ -90,7 +90,7 @@ Clone the automation script from your GitHub repository onto the server.
 
 ```bash
 # Clone your automation script repository (use your PAT as the password)
-git clone [https://github.com/YourUsername/server-automation.git](https://github.com/YourUsername/server-automation.git)
+git clone https://github.com/amozeshfarsi/server-automation.git server-automation
 cd server-automation
 
 # Edit the variables file
