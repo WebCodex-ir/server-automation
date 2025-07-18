@@ -163,5 +163,3 @@ ansible-playbook -i inventory.ini playbook.yml --ask-become-pass
 
 اکنون به آدرس `https://your-new-domain.com` بروید. سرور شما فعال است\!
 
-```
-```
