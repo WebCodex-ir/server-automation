@@ -78,7 +78,7 @@ adduser your_user_name
 usermod -aG sudo your_user_name
 
 # Clone this automation script
-git clone [https://github.com/YourUsername/server-automation.git](https://github.com/YourUsername/server-automation.git)
+git clone https://github.com/amozeshfarsi/server-automation.git server-automation
 cd server-automation
 (Note: For the rest of the steps, you can stay logged in as root to run the playbook, or log in as your new user.)
 (نکته: برای ادامه مراحل می‌توانید به عنوان root باقی بمانید یا با کاربر جدید خود وارد شوید.)
