@@ -71,3 +71,47 @@ usermod -aG sudo webcodex
 # Exit and log back in as the new user to continue
 exit
 ssh webcodex@YOUR_NEW_SERVER_IP
+
+
+
+### Step 2: Configure Cloudflare
+قدم ۲: پیکربندی کلودفلر
+Log in to Cloudflare. Create two A records for your domain (@ and www) pointing to your server's IP. Critically, set their proxy status to "DNS Only" (Grey Cloud) ⚪. This is temporary and required for SSL generation.
+
+وارد حساب کلودفلر شوید. دو رکورد A برای دامنه اصلی (@) و www بسازید که به IP سرور شما اشاره کنند. مهم: وضعیت پراکسی را روی "DNS Only" (ابر خاکستری ⚪) قرار دهید. این یک مرحله موقتی و برای صدور گواهینامه SSL الزامی است.
+
+Step 3: Clone & Configure the Script
+قدم ۳: دانلود و پیکربندی اسکریپت
+Clone the automation script from your GitHub repository onto the server.
+اسکریپت اتوماسیون را از گیت‌هاب خود روی سرور کلون کنید.
+
+```bash
+
+# Clone your automation script repository (use your PAT as the password)
+git clone [https://github.com/YourUsername/server-automation.git](https://github.com/YourUsername/server-automation.git)
+cd server-automation
+
+# Edit the variables file
+nano vars/main.yml
+In vars/main.yml, update server_user to the username you created in Step 1 (e.g., webcodex), and fill in your domain, email, IP, and new database passwords.
+
+در فایل vars/main.yml، متغیر server_user را به نام کاربری که در قدم ۱ ساختید (مثلاً webcodex) تغییر داده و بقیه اطلاعات (دامنه، ایمیل، IP، و رمزهای دیتابیس) را به‌روز کنید.
+
+Step 4: Run the Playbook!
+قدم ۴: اسکریپت را اجرا کنید!
+Execute the Ansible playbook. You will be asked for your user's sudo password.
+اسکریپت Ansible را اجرا کنید. از شما رمز عبور sudo کاربرتان پرسیده خواهد شد.
+
+Bash
+
+ansible-playbook -i inventory.ini playbook.yml --ask-become-pass
+The process will take about 5-10 minutes.
+این فرآیند حدود ۵ تا ۱۰ دقیقه طول می‌کشد.
+
+Step 5: Finalize Cloudflare & Test
+قدم ۵: نهایی‌سازی کلودفلر و تست
+After the playbook completes successfully (failed=0), go back to Cloudflare and re-enable the proxy by changing the grey clouds back to orange (Proxied) 🔶.
+پس از اتمام موفقیت‌آمیز اسکریپت (failed=0)، به کلودفلر برگشته و پراکسی را با تغییر ابرهای خاکستری به نارنجی (Proxied) 🔶 دوباره فعال کنید.
+
+Navigate to https://your-new-domain.com. Your server is live!
+به آدرس https://your-new-domain.com بروید. سرور شما فعال است!
