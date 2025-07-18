@@ -1,69 +1,59 @@
-Project: Ansible Laravel Server
-This project provides an Ansible playbook to automatically set up a production-ready server for Laravel applications on a fresh Ubuntu 24 installation.
+# Ansible Laravel Server Setup | راه‌اندازی سرور لاراول با Ansible
 
-این پروژه یک اسکریپت Ansible برای راه‌اندازی خودکار یک سرور آماده به کار برای اپلیکیشن‌های لاراول، روی یک اوبونتو ۲۴ خام، فراهم می‌کند.
-
-۱. ساختار نهایی پروژه در گیت‌هاب
-Final Project Structure on GitHub
-
-ابتدا، این ساختار را در پوشه server-automation روی کامپیوتر شخصی خود ایجاد کنید و فایل‌ها را با محتوای زیر پر کنید.
-
-First, create this structure in the server-automation folder on your local machine and fill the files with the content below.
-
-server-automation/
-├── README.md                 # راهنمای پروژه (فایل زیر)
-├── inventory.ini             # تعریف سرور هدف
-├── playbook.yml              # اسکریپت اصلی اتوماسیون
-├── templates/                # الگوهای فایل‌های کانفیگ
-│   ├── docker-compose.yml.j2
-│   ├── Dockerfile.j2
-│   ├── nginx.conf.j2
-│   └── certbot-renew.sh.j2
-└── vars/                     # فایل متغیرهای پروژه
-    └── main.yml
-۲. محتوای فایل‌ها
-File Contents
-
-README.md
-(این فایل را در ریشه پروژه خود قرار دهید)
-
-Markdown
-
-# Ansible Laravel Server Setup
-
-This playbook automates the setup of a secure, production-ready server for Laravel applications on **Ubuntu 24**. It uses Docker to containerize services (Nginx, PHP 8.3, MySQL 8) and configures SSL using Let's Encrypt (Certbot).
-
-این اسکریپت، فرآیند راه‌اندازی یک سرور امن و آماده به کار برای اپلیکیشن‌های لاراول را روی **اوبونتو ۲۴** خودکار می‌کند. این پروژه از داکر برای ایزوله‌سازی سرویس‌ها (Nginx, PHP 8.3, MySQL 8) استفاده کرده و گواهینامه SSL را با Let's Encrypt (Certbot) پیکربندی می‌کند.
+**Creator:** Meisam Shadkam ([WebCodexPro])  
+**Contact:** [meisamshadkam@gmail.com] | **Website:** [https://webcodex.ir] | **GitHub:** [@amozeshfarsi]
 
 ---
 
-## Features | امکانات
+## About This Project
+### درباره این پروژه
 
--   **Ubuntu 24 LTS** preparation (UFW firewall, basic packages).
--   **Docker & Docker Compose** installation.
--   **Containerized Services:** Nginx, PHP 8.3-FPM, MySQL 8.
--   **Laravel:** Downloads and sets up the latest version.
--   **Certbot:** Automatically obtains and configures a free SSL certificate from Let's Encrypt.
--   **Security:** Sets correct file permissions and configures auto-renewal for SSL.
+This project was born out of the need to simplify and automate the complex, error-prone process of deploying a production-ready Laravel server. After facing numerous challenges with manual setups—from firewall misconfigurations to complex SSL setups and dependency issues—I decided to codify the entire process into a single, reliable Ansible playbook.
+
+این پروژه از نیازی واقعی سرچشمه گرفت: ساده‌سازی و خودکارسازی فرآیند پیچیده و مستعد خطای راه‌اندازی یک سرور حرفه‌ای برای لاراول. پس از مواجهه با چالش‌های متعدد در راه‌اندازی دستی—از خطاهای پیکربندی فایروال گرفته تا تنظیمات پیچیده SSL و مشکلات وابستگی‌ها—تصمیم گرفتم کل این فرآیند را به یک اسکریپت Ansible قابل اعتماد تبدیل کنم.
+
+### What Does It Do?
+### این اسکریپت چه کاری انجام می‌دهد؟
+
+This script transforms a bare-bones **Ubuntu 24** server into a secure, high-performance platform for Laravel applications with a single command. It handles everything from initial server hardening to deploying the Laravel application within a Docker environment.
+
+این اسکریپت یک سرور خام **اوبونتو ۲۴** را با یک دستور به یک پلتفرم امن و بهینه برای اپلیکیشن‌های لاراول تبدیل می‌کند. همه چیز، از آماده‌سازی اولیه سرور گرفته تا استقرار لاراول در یک محیط داکر، توسط این اسکریپت انجام می‌شود.
+
+### Key Benefits
+### مزایای کلیدی
+
+* **🚀 Speed:** Deploy a complete server in minutes, not hours.
+    **(سرعت:** راه‌اندازی یک سرور کامل در چند دقیقه به جای چند ساعت.)
+* **⚙️ Consistency:** Every server is configured identically, eliminating "it works on my machine" issues and human error.
+    **(ثبات:** تمام سرورها به صورت یکسان پیکربندی می‌شوند و خطاهای انسانی حذف می‌گردد.)
+* **🔒 Security:** Implements best practices like a non-root user, a configured firewall, and automated SSL from the start.
+    **(امنیت:** بهترین شیوه‌های امنیتی مانند کاربر غیر-روت، فایروال و SSL خودکار از ابتدا اجرا می‌شود.)
+* **✅ Reliability:** The script is the result of extensive debugging and is designed to run flawlessly on the first try.
+    **(قابلیت اطمینان:** این اسکریپت نتیجه عیب‌یابی‌های متعدد است و برای اجرای بی‌نقص در همان تلاش اول طراحی شده است.)
 
 ---
 
-## Prerequisites | پیش‌نیازها
+## Getting Started | شروع به کار
+Follow this guide to deploy your own server.
+برای راه‌اندازی سرور خود، این راهنما را دنبال کنید.
+
+### Prerequisites | پیش‌نیازها
 
 1.  A fresh server running **Ubuntu 24 LTS**. (یک سرور خام با اوبونتو ۲۴)
 2.  A **domain name** pointed to your server's IP address. (یک دامنه که به IP سرور اشاره می‌کند)
 3.  A **Cloudflare** account managing your domain's DNS. (یک حساب کلودفلر برای مدیریت DNS)
-4.  A **GitHub account** and a **Personal Access Token (PAT)** with `repo` scope. (یک حساب گیت‌هاب و یک توکن دسترسی شخصی با دسترسی `repo`)
+4.  A **GitHub account** and a **Personal Access Token (PAT)** with `repo` scope. (یک حساب گیت‌هاب و یک توکن دسترسی شخصی)
 
 ---
 
 ## Step-by-Step Guide | راهنمای قدم به قدم
 
-### Step 1: Prepare Server & Clone Script
-### قدم ۱: آماده‌سازی سرور و دانلود اسکریپت
+### Step 1: Prepare Server & Create User
+### قدم ۱: آماده‌سازی سرور و ساخت کاربر
 
-Connect to your new server as `root` and install the necessary tools. Then, clone this repository.
-به عنوان کاربر `root` به سرور جدید خود SSH بزنید، ابزارهای لازم را نصب کرده و سپس این مخزن را کلون کنید.
+Connect to your new server as `root`. First, install the essential tools, then create a new non-root user for running the project.
+
+به عنوان کاربر `root` به سرور جدید خود SSH بزنید. ابتدا ابزارهای لازم را نصب کرده و سپس یک کاربر جدید غیر-روت برای اجرای پروژه بسازید.
 
 ```bash
 # Connect to the new server
@@ -73,57 +63,53 @@ ssh root@YOUR_NEW_SERVER_IP
 apt update
 apt install git ansible -y
 
-# Create a non-root user and give it sudo privileges
-adduser your_user_name
-usermod -aG sudo your_user_name
+# Create a non-root user (replace 'webcodex' with your desired username)
+adduser webcodex
+usermod -aG sudo webcodex
 
-# Clone this automation script
-git clone https://github.com/amozeshfarsi/server-automation.git server-automation
-cd server-automation
-(Note: For the rest of the steps, you can stay logged in as root to run the playbook, or log in as your new user.)
-(نکته: برای ادامه مراحل می‌توانید به عنوان root باقی بمانید یا با کاربر جدید خود وارد شوید.)
+# Exit and log back in as the new user
+exit
+ssh webcodex@YOUR_NEW_SERVER_IP
+
+
 
 Step 2: Configure Cloudflare
 قدم ۲: پیکربندی کلودفلر
-Log in to your Cloudflare account and go to the DNS settings for your domain. Ensure you have two A records pointing to your server's IP, and critically, set their proxy status to "DNS Only" (Grey Cloud) for the SSL certificate generation to succeed.
+Log in to Cloudflare. Create two A records for your domain (@ and www) pointing to your server's IP. Critically, set their proxy status to "DNS Only" (Grey Cloud) ⚪.
 
-وارد حساب کلودفلر خود شده و به تنظیمات DNS دامنه بروید. دو رکورد A بسازید که به IP سرور شما اشاره کنند و بسیار مهم: وضعیت پراکسی آنها را روی "DNS Only" (ابر خاکستری ⚪) قرار دهید تا صدور گواهینامه SSL با موفقیت انجام شود.
+وارد حساب کلودفلر شوید. دو رکورد A برای دامنه اصلی (@) و www بسازید که به IP سرور شما اشاره کنند. مهم: وضعیت پراکسی را روی "DNS Only" (ابر خاکستری ⚪) قرار دهید.
 
-Type	Name	Content (IP Address)	Proxy Status
-A	@	YOUR_NEW_SERVER_IP	DNS Only
-A	www	YOUR_NEW_SERVER_IP	DNS Only
-
-صادر کردن به «کاربرگ‌نگار»
-Step 3: Configure Variables
-قدم ۳: پیکربندی متغیرها
-Edit the vars/main.yml file and fill it with your new server and domain information.
-فایل vars/main.yml را ویرایش کرده و آن را با اطلاعات سرور و دامنه جدید خود پر کنید.
+Step 3: Clone & Configure the Script
+قدم ۳: دانلود و پیکربندی اسکریپت
+Clone the automation script from your GitHub repository onto the server.
+اسکریپت اتوماسیون را از گیت‌هاب خود روی سرور کلون کنید.
 
 Bash
 
-nano vars/main.yml
-YAML
+# Clone your automation script repository
+git clone [https://github.com/YourUsername/server-automation.git](https://github.com/YourUsername/server-automation.git)
+cd server-automation
 
-# vars/main.yml
-server_user: "your_user_name"  # The non-root user you created in Step 1
-domain_name: "your-new-domain.com"
-letsencrypt_email: "your-email@example.com"
-# ... set strong database passwords ...
+# Edit the variables file
+nano vars/main.yml
+In vars/main.yml, update server_user to the username you created in Step 1 (webcodex), and fill in your domain, email, IP, and new database passwords.
+در فایل vars/main.yml، متغیر server_user را به نام کاربری که در قدم ۱ ساختید (webcodex) تغییر داده و بقیه اطلاعات (دامنه، ایمیل، IP، و رمزهای دیتابیس) را به‌روز کنید.
+
 Step 4: Run the Playbook!
 قدم ۴: اسکریپت را اجرا کنید!
-Execute the Ansible playbook. This single command will provision your entire server.
-اسکریپت Ansible را اجرا کنید. این دستور تمام سرور شما را آماده‌سازی می‌کند.
+Execute the Ansible playbook. You will be asked for your user's sudo password.
+اسکریپت Ansible را اجرا کنید. از شما رمز عبور sudo کاربرتان پرسیده خواهد شد.
 
 Bash
 
-ansible-playbook -i inventory.ini playbook.yml
-This process will take about 5-10 minutes. Go grab a coffee! ☕
+ansible-playbook -i inventory.ini playbook.yml --ask-become-pass
+The process will take about 5-10 minutes.
 این فرآیند حدود ۵ تا ۱۰ دقیقه طول می‌کشد.
 
 Step 5: Finalize Cloudflare & Test
 قدم ۵: نهایی‌سازی کلودفلر و تست
-After the playbook completes successfully (failed=0), go back to your Cloudflare DNS settings and re-enable the proxy by changing the grey clouds back to orange (Proxied).
-پس از اتمام موفقیت‌آمیز اسکریپت (failed=0)، به تنظیمات کلودفلر برگشته و پراکسی را با تغییر ابرهای خاکستری به نارنجی (Proxied) 🔶 دوباره فعال کنید.
+After the playbook completes successfully, go back to Cloudflare and re-enable the proxy by changing the grey clouds back to orange (Proxied) 🔶.
+پس از اتمام موفقیت‌آمیز اسکریپت، به کلودفلر برگشته و پراکسی را با تغییر ابرهای خاکستری به نارنجی (Proxied) 🔶 دوباره فعال کنید.
 
-Now, open your browser and navigate to https://your-new-domain.com. You should see the Laravel welcome page, fully secured with SSL.
-اکنون با مراجعه به آدرس https://your-new-domain.com در مرورگر، باید صفحه خوش‌آمدگویی لاراول را با قفل امنیتی مشاهده کنید.
+Navigate to https://your-new-domain.com. Your server is live!
+به آدرس https://your-new-domain.com بروید. سرور شما فعال است!
