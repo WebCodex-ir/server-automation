@@ -169,3 +169,10 @@
             src: templates/certbot-renew.sh.j2
             dest: /etc/cron.daily/certbot-renew
             mode: '0755'
+            
+    - name: ">> 9. Finalize Permissions"
+      shell: |
+        chown -R {{ server_user }}:www-data {{ project_path }}/src/storage
+        chown -R {{ server_user }}:www-data {{ project_path }}/src/bootstrap/cache
+        chmod -R 775 {{ project_path }}/src/storage
+        chmod -R 775 {{ project_path }}/src/bootstrap/cache
