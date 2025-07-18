@@ -127,6 +127,11 @@
           loop:
             - 'storage'
             - 'bootstrap/cache'
+        - name: "Set FINAL ownership for storage and cache"
+          command: "chown -R {{ server_user }}:www-data {{ project_path }}/src/{{ item }}"
+          loop:
+            - 'storage'
+            - 'bootstrap/cache'
 
     - name: ">> 6. Obtain SSL Certificate with Certbot"
       block:
