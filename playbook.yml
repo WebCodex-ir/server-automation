@@ -7,10 +7,23 @@
     - name: ">> 1. Basic Server Setup"
       block:
         - name: "Install prerequisites"
-          apt: { name: ['ufw','curl','git','composer'], state: present, update_cache: yes }
+          apt:
+            name:
+              - ufw
+              - curl
+              - git
+              - composer
+            state: present
+            update_cache: yes
         - name: "Configure UFW"
-          ufw: { rule: allow, port: "{{ item }}", proto: tcp }
-          loop: ['22','80','443']
+          ufw:
+            rule: allow
+            port: "{{ item }}"
+            proto: tcp
+          loop:
+            - '22'
+            - '80'
+            - '443'
 
     - name: ">> 2. Install Docker"
       block:
@@ -25,7 +38,11 @@
             state: present
         - name: "Install Docker packages"
           apt:
-            name: ['docker-ce','docker-ce-cli','containerd.io','docker-compose-plugin']
+            name:
+              - docker-ce
+              - docker-ce-cli
+              - containerd.io
+              - docker-compose-plugin
             state: present
             update_cache: yes
         - name: "Add '{{ server_user }}' to docker group"
@@ -84,7 +101,7 @@
             -d {{ domain_name }} -d www.{{ domain_name }}
           args:
             creates: "/etc/letsencrypt/live/{{ domain_name }}"
-    
+
     - name: ">> 6. Launch Final Application"
       block:
         - name: "Run docker compose up"
