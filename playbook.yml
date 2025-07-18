@@ -132,6 +132,10 @@
           loop:
             - 'storage'
             - 'bootstrap/cache'
+        - name: "Make .env file group-writable"
+          file:
+            path: "{{ project_path }}/src/.env"
+            mode: '0664'
 
     - name: ">> 6. Obtain SSL Certificate with Certbot"
       block:
