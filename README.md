@@ -10,7 +10,7 @@
 
 This project was born out of the need to simplify and automate the complex, error-prone process of deploying a production-ready Laravel server. After facing numerous challenges with manual setups—from firewall misconfigurations to complex SSL setups and dependency issues—I decided to codify the entire process into a single, reliable Ansible playbook.
 
-این پروژه از نیازی واقعی سرچش-مه گرفت: ساده‌سازی و خودکارسازی فرآیند پیچیده و مستعد خطای راه‌اندازی یک سرور حرفه‌ای برای لاراول. پس از مواجهه با چالش‌های متعدد در راه‌اندازی دستی—از خطاهای پیکربندی فایروال گرفته تا تنظیمات پیچیده SSL و مشکلات وابستگی‌ها—تصمیم گرفتم کل این فرآیند را به یک اسکریپت Ansible قابل اعتماد تبدیل کنم.
+این پروژه از نیازی واقعی سرچشمه گرفت: ساده‌سازی و خودکارسازی فرآیند پیچیده و مستعد خطای راه‌اندازی یک سرور حرفه‌ای برای لاراول. پس از مواجهه با چالش‌های متعدد در راه‌اندازی دستی—از خطاهای پیکربندی فایروال گرفته تا تنظیمات پیچیده SSL و مشکلات وابستگی‌ها—تصمیم گرفتم کل این فرآیند را به یک اسکریپت Ansible قابل اعتماد تبدیل کنم.
 
 ### What Does It Do?
 ### این اسکریپت چه کاری انجام می‌دهد؟
@@ -23,9 +23,13 @@ This script transforms a bare-bones **Ubuntu 24** server into a secure, high-per
 ### مزایای کلیدی
 
 * **🚀 Speed:** Deploy a complete server in minutes, not hours.
+    **(سرعت:** راه‌اندازی یک سرور کامل در چند دقیقه به جای چند ساعت.)
 * **⚙️ Consistency:** Every server is configured identically, eliminating human error.
+    **(ثبات:** تمام سرورها به صورت یکسان پیکربندی می‌شوند و خطاهای انسانی حذف می‌گردد.)
 * **🔒 Security:** Implements best practices like a non-root user, a configured firewall, and automated SSL.
+    **(امنیت:** بهترین شیوه‌های امنیتی مانند کاربر غیر-روت، فایروال و SSL خودکار اجرا می‌شود.)
 * **✅ Reliability:** The script is the result of extensive debugging and is designed to run flawlessly on the first try.
+    **(قابلیت اطمینان:** این اسکریپت نتیجه عیب‌یابی‌های متعدد است و برای اجرای بی‌نقص در همان تلاش اول طراحی شده است.)
 
 ---
 
@@ -36,7 +40,7 @@ This script transforms a bare-bones **Ubuntu 24** server into a secure, high-per
 1.  A fresh server running **Ubuntu 24 LTS**.
 2.  A **domain name** pointed to your server's IP address.
 3.  A **Cloudflare** account managing your domain's DNS.
-4.  A **GitHub account** and a **Personal Access Token (PAT)** with `repo` scope to clone your private repository.
+4.  A **GitHub account** and a **Personal Access Token (PAT)** with `repo` scope to clone your repository.
 
 ### Step-by-Step Guide
 
@@ -69,7 +73,7 @@ Clone the automation script from your GitHub repository onto the server.
 
 ```bash
 # Clone your automation script repository (use your PAT as the password)
-git clone https://github.com/amozeshfarsi/server-automation.git server-automation
+git clone [https://github.com/amozeshfarsi/server-automation.git](https://github.com/amozeshfarsi/server-automation.git)
 cd server-automation
 
 # Edit the variables file
@@ -138,7 +142,7 @@ ssh webcodex@YOUR_NEW_SERVER_IP
 
 ```bash
 # کلون کردن مخزن اسکریپت (از توکن به عنوان پسورد استفاده کنید)
-git clone https://github.com/amozeshfarsi/server-automation.git server-automation
+git clone [https://github.com/amozeshfarsi/server-automation.git](https://github.com/amozeshfarsi/server-automation.git)
 cd server-automation
 
 # ویرایش فایل متغیرها
