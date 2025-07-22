@@ -12,7 +12,7 @@
               - ufw
               - curl
               - git
-              - composer
+              - python3-pip
             state: present
             update_cache: yes
         - name: "Configure UFW"
@@ -28,13 +28,26 @@
     - name: ">> 2. Install Docker"
       block:
         - name: "Create directory for apt keyrings"
-          file: { path: /etc/apt/keyrings, state: directory, mode: '0755' }
-        - name: "Download and de-armor Docker's GPG key"
-          shell: "curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg"
-          args: { creates: /etc/apt/keyrings/docker.gpg }
-        - name: "Add Docker repository"
+          file:
+            path: /etc/apt/keyrings
+            state: directory
+            mode: '0755'
+        - name: "Download and de-armor Docker's official GPG key"
+          shell: >
+            curl -fsSL https://download.docker.com/linux/ubuntu/gpg |
+            gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+          args:
+            creates: /etc/apt/keyrings/docker.gpg
+        - name: "Set permissions for the GPG key"
+          file:
+            path: /etc/apt/keyrings/docker.gpg
+            mode: '0644'
+        - name: "Add Docker repository to Apt sources"
           apt_repository:
-            repo: "deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu {{ ansible_lsb.codename }} stable"
+            repo: >
+              deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.gpg]
+              https://download.docker.com/linux/ubuntu
+              {{ ansible_lsb.codename }} stable
             state: present
         - name: "Install Docker packages"
           apt:
@@ -46,38 +59,55 @@
             state: present
             update_cache: yes
         - name: "Add '{{ server_user }}' to docker group"
-          user: { name: "{{ server_user }}", groups: docker, append: yes }
+          user:
+            name: "{{ server_user }}"
+            groups: docker
+            append: yes
 
-    - name: ">> 3. Setup Project Structure & Laravel"
+    - name: ">> 3. Setup Project Structure"
       block:
-        - name: "Create project root directory"
-          file: { path: "{{ project_path }}", state: directory, owner: "{{ server_user }}", group: "{{ server_user }}" }
-        - name: "Install Laravel Application"
-          become_user: "{{ server_user }}"
-          command: "composer create-project --prefer-dist laravel/laravel {{ project_path }}/src"
-          args:
-            creates: "{{ project_path }}/src/artisan"
-
-    - name: ">> 4. Configure Project"
-      block:
-        - name: "Create nginx directory"
-          file: { path: "{{ project_path }}/nginx", state: directory }
-        - name: "Template out Docker and Nginx files"
-          template: { src: "templates/{{ item.src }}", dest: "{{ project_path }}/{{ item.dest }}" }
+        - name: "Create project directories"
+          file:
+            path: "{{ project_path }}/{{ item }}"
+            state: directory
+            owner: "{{ server_user }}"
+            group: "{{ server_user }}"
+          loop:
+            - ''
+            - 'src'
+            - 'nginx'
+        - name: "Template out config files"
+          template:
+            src: "templates/{{ item.src }}"
+            dest: "{{ project_path }}/{{ item.dest }}"
           loop:
             - { src: 'docker-compose.yml.j2', dest: 'docker-compose.yml' }
             - { src: 'Dockerfile.j2', dest: 'Dockerfile' }
+            - { src: 'project_env.j2', dest: '.env' }
             - { src: 'nginx.conf.j2', dest: 'nginx/default.conf' }
-        - name: "Create Laravel .env file from example"
+        - name: "Change ownership of project directory"
+          file:
+            path: "{{ project_path }}"
+            owner: "{{ server_user }}"
+            group: "{{ server_user }}"
+            recurse: yes
+
+    - name: ">> 4. Install Laravel Application"
+      become: no
+      command: >
+        docker run --rm
+        -v "{{ project_path }}/src:/app"
+        composer create-project --prefer-dist laravel/laravel .
+      args:
+        chdir: "{{ project_path }}"
+        creates: "{{ project_path }}/src/artisan"
+
+    - name: ">> 5. Configure Laravel and Permissions"
+      block:
+        - name: "Create Laravel .env file"
           command: "cp {{ project_path }}/src/.env.example {{ project_path }}/src/.env"
-          args: { creates: "{{ project_path }}/src/.env" }
-        - name: "Set correct ownership for the entire project"
-          file: { path: "{{ project_path }}", owner: "{{ server_user }}", group: "www-data", recurse: yes }
-        - name: "Set correct permissions for storage and cache"
-          file: { path: "{{ project_path }}/src/{{ item }}", state: directory, mode: 'g+w', recurse: yes }
-          loop: ['storage', 'bootstrap/cache']
-        - name: "Make .env file group-writable"
-          file: { path: "{{ project_path }}/src/.env", mode: '0664' }
+          args:
+            creates: "{{ project_path }}/src/.env"
         - name: "Set database credentials in Laravel .env"
           lineinfile:
             dest: "{{ project_path }}/src/.env"
@@ -89,33 +119,69 @@
             - { key: 'DB_USERNAME', value: '{{ db_user }}' }
             - { key: 'DB_PASSWORD', value: '{{ db_password }}' }
             - { key: 'APP_URL', value: 'https://{{ domain_name }}' }
+        - name: "Set permissions for storage and cache"
+          file:
+            path: "{{ project_path }}/src/{{ item }}"
+            state: directory
+            mode: '0775'
+          loop:
+            - 'storage'
+            - 'bootstrap/cache'
+        - name: "Set FINAL ownership for storage and cache"
+          command: "chown -R {{ server_user }}:www-data {{ project_path }}/src/{{ item }}"
+          loop:
+            - 'storage'
+            - 'bootstrap/cache'
+        - name: "Make .env file group-writable"
+          file:
+            path: "{{ project_path }}/src/.env"
+            mode: '0664'
 
-    - name: ">> 5. Obtain SSL Certificate"
+    - name: ">> 6. Obtain SSL Certificate with Certbot"
       block:
+        - name: "Stop web container if running"
+          command: "docker compose stop web"
+          args:
+            chdir: "{{ project_path }}"
+          ignore_errors: true
         - name: "Run Certbot to get certificate"
+          tags: certbot
           command: >
-            docker run --rm -p 80:80
-            -v "/etc/letsencrypt:/etc/letsencrypt" -v "/var/lib/letsencrypt:/var/lib/letsencrypt"
-            certbot/certbot certonly --standalone --agree-tos
-            --email {{ letsencrypt_email }} --no-eff-email -n
+            docker run --rm -p 80:80 -p 443:443
+            -v "/etc/letsencrypt:/etc/letsencrypt"
+            -v "/var/lib/letsencrypt:/var/lib/letsencrypt"
+            certbot/certbot certonly --standalone
+            --agree-tos --email {{ letsencrypt_email }} --no-eff-email -n
             -d {{ domain_name }} -d www.{{ domain_name }}
           args:
             creates: "/etc/letsencrypt/live/{{ domain_name }}"
 
-    - name: ">> 6. Launch Final Application"
+    - name: ">> 7. Launch Final Application"
       block:
         - name: "Run docker compose up"
-          command: "docker compose up -d"
-          args: { chdir: "{{ project_path }}" }
-        - name: "Wait for services to be ready"
-          pause:
-            seconds: 15
+          community.docker.docker_compose_v2:
+            project_src: "{{ project_path }}"
         - name: "Generate Laravel App Key"
-          command: "docker compose exec app php artisan key:generate --force"
-          args: { chdir: "{{ project_path }}" }
+          command: "docker compose exec app php artisan key:generate"
+          args:
+            chdir: "{{ project_path }}"
+
         - name: "Run Laravel migrations"
           command: "docker compose exec app php artisan migrate --force"
-          args: { chdir: "{{ project_path }}" }
+          args:
+            chdir: "{{ project_path }}"
 
-    - name: ">> 7. Setup Auto-Renewal for SSL"
-      template: { src: templates/certbot-renew.sh.j2, dest: /etc/cron.daily/certbot-renew, mode: '0755' }
+    - name: ">> 8. Setup Auto-Renewal for SSL"
+      block:
+        - name: "Template out renewal script"
+          template:
+            src: templates/certbot-renew.sh.j2
+            dest: /etc/cron.daily/certbot-renew
+            mode: '0755'
+            
+    - name: ">> 9. Finalize Permissions"
+      shell: |
+        chown -R {{ server_user }}:www-data {{ project_path }}/src/storage
+        chown -R {{ server_user }}:www-data {{ project_path }}/src/bootstrap/cache
+        chmod -R 775 {{ project_path }}/src/storage
+        chmod -R 775 {{ project_path }}/src/bootstrap/cache
